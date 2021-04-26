@@ -4,81 +4,101 @@
 #include <conio.h>
 #include <stdbool.h>
 
-int contains(const char array[], char chr);
+int contains(const char *array, char chr);
 
-typedef struct Vertex {
-    const char chr;
-} Vertex;
+void createGraph(char *inputFile, char *outputFile);
+
+void addVertexAndEdgeToGraph(char ***adjacencyList, char **vertices, int **edgesCount, int *op,  const char *vertex,
+                              const char *edge);
+
 typedef struct Graph {
-    int size;
     char **adjacencyList;
+    char *vertices;
+    int *edgesCount;
 } Graph;
 
 int main(void) {
-//	Graph graph;
-    char **adjacencyList = NULL;
-    char *vertices = NULL;
-    int *edgesCount = NULL;
-    int order = 0;//индекс прохода по массиву
-    char first, second = 0;
+    createGraph("C:/5th/Graph.txt", "C:/5th/out.txt");
+    return EXIT_SUCCESS;
+}
+
+void createGraph(char *inputFile, char *outputFile) {
+    Graph graph;
+    graph.adjacencyList = NULL;
+    graph.vertices = NULL;
+    graph.edgesCount = NULL;
+    int order = 0;//индекс прохода по массивам vertices и edgesCount.
+    char vertex, edge;
+    char *vp = &vertex;
+    char *ep = &edge;
+    int *op = &order;
     FILE *fp;
 
-    if ((fp = fopen("C:/5th/Graph.txt", "r")) == NULL) {
+    if ((fp = fopen(inputFile, "r")) == NULL) {
         printf("Failed to open\n");
         exit(1);
     }
 
-    while (fscanf(fp, "%c-%c\n", &first, &second) == 2) {
-        int indexOfVertex = contains(vertices, first);
-        if (indexOfVertex == -1) {
-            vertices = (char *) realloc(vertices, (order + 1) * sizeof(char));
-            vertices[order] = first;
-
-            adjacencyList = (char **) realloc(adjacencyList, (order + 1) * sizeof(char *));
-            if (adjacencyList == NULL) {
-                printf("Pointer to array of pointers");
-                exit(1);
-            }
-
-            edgesCount = (int *) realloc(edgesCount, (order + 1) * sizeof(int));
-            edgesCount[order] = 1;
-
-            adjacencyList[order] = NULL;
-            adjacencyList[order] = (char *) realloc(adjacencyList[order], 1 * sizeof(char));
-            if (adjacencyList[order] == NULL) {
-                printf("Sequence %d is empty", order);
-                exit(1);
-            }
-            adjacencyList[order][0] = second;
-            order++;
-        } else {
-            adjacencyList[indexOfVertex] = (char *)
-                    realloc(adjacencyList[indexOfVertex], (edgesCount[indexOfVertex] + 1) * sizeof(char));
-            if (adjacencyList[indexOfVertex] == NULL) exit(1);
-            edgesCount[indexOfVertex]++;
-            adjacencyList[indexOfVertex][ edgesCount[indexOfVertex]-1] = second;
-        }
+    while (fscanf(fp, "%c-%c\n", vp, ep) == 2) {
+        addVertexAndEdgeToGraph(&graph.adjacencyList, &graph.vertices, &graph.edgesCount, op, vp, ep);
+    }
+    if ((fp = fopen(outputFile, "w")) == NULL) {
+        printf("Fail when open file\n");
+        exit(1);
     }
     for (int i = 0; i < order; i++) {
-        register int size = edgesCount[i];
-        printf("%c-", vertices[i]);
+        register int size = graph.edgesCount[i];
+        fprintf(fp, "%c-", graph.vertices[i]);
         for (int j = 0; j < size; j++) {
-            if (j != 0)printf(",");
-
-            printf("%c", adjacencyList[i][j]);
+            if (j != 0) fprintf(fp, ",");
+            fprintf(fp, "%c", graph.adjacencyList[i][j]);
         }
-        printf("\n");
+        fprintf(fp, "\n");
     }
 
     for (int i = 0; i < order; i++)
-        free(adjacencyList[i]);
-    free(adjacencyList);
-    free(vertices);
+        free(graph.adjacencyList[i]);
+    free(graph.adjacencyList);
+    free(graph.vertices);
     fclose(fp);
-    return EXIT_SUCCESS;
 }
 
-int contains(const char array[], char chr) {
+void addVertexAndEdgeToGraph(char ***adjacencyList, char **vertices, int **edgesCount, int *op,  const char *vertex,
+                              const char *edge) {
+    int indexOfVertex = contains(*vertices, *vertex);
+
+    if (indexOfVertex == -1) {
+        *vertices = (char *) realloc(*vertices, (*op + 1) * sizeof(char));
+        *vertices[*op] = *vertex;
+
+
+        *adjacencyList = (char **) realloc(*adjacencyList, (*op + 1) * sizeof(char *));
+        if (*adjacencyList == NULL) {
+            printf("Pointer to array of pointers if empty");
+            exit(1);
+        }
+
+        *edgesCount = (int *) realloc(*edgesCount, (*op + 1) * sizeof(int));
+        *edgesCount[*op] = 1;
+
+        *adjacencyList[*op] = NULL;
+        *adjacencyList[*op] = (char *) realloc(*adjacencyList[*op], 1 * sizeof(char));
+        if (*adjacencyList[*op] == NULL) {
+            printf("Sequence %d is empty", *op);
+            exit(1);
+        }
+        *adjacencyList[*op][0] = *edge;
+        *op += 1;
+    } else {
+        *adjacencyList[indexOfVertex] = (char *)
+                realloc(*adjacencyList[indexOfVertex], (*edgesCount[indexOfVertex] + 1) * sizeof(char));
+        if (adjacencyList[indexOfVertex] == NULL) exit(1);
+        *edgesCount[indexOfVertex] += 1;
+        *adjacencyList[indexOfVertex][*edgesCount[indexOfVertex] - 1] = *edge;
+    }
+}
+
+int contains(const char *array, char chr) {
     if (array != NULL) {
         register int t;
         for (t = 0; array[t]; t++)
