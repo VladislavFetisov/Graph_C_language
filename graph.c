@@ -18,7 +18,7 @@ void createGraph(char *inputFile, char *outputFile) {
     FILE *fp;
 
     if ((fp = fopen(inputFile, "r")) == NULL) {
-        printf("Failed to open\n");
+        printf("Failed to open %s\n",inputFile);
         exit(1);
     }
 
@@ -27,7 +27,7 @@ void createGraph(char *inputFile, char *outputFile) {
         addVertexAndEdgeToGraph(&graph.adjacencyList, &graph.vertices, &graph.edgesCount, &order, &edge, &vertex);
     }
     if ((fp = fopen(outputFile, "w")) == NULL) {
-        printf("Fail when open file\n");
+        printf("Fail to open or create %s\n",outputFile);
         exit(1);
     }
     for (int i = 0; i < order; i++) {
